@@ -1,0 +1,5 @@
+1. Investigate when CONFIG_MSM_KRAIT_WFE_FIXUP
+2. Investigate aboot and aboot logging (kallsyms.txt contains some aboot functions)
+3. Investigate CONFIG_MSM_CPU_PWRCTL and others below in config
+4. Need to replace CONFIG_ACER_BQ27520 and CONFIG_ACER_PM8921_CHARGER with CONFIG_PM8921_CHARGER
+5. Investigate what CONFIG_FB_MSM_MIPI_PANEL_DETECT=y does and what to do if not set ( does selecting only 1 panel in config do the trick ? )
