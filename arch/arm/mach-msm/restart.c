@@ -290,7 +290,7 @@ static int __init msm_pmic_restart_init(void)
 	atomic_notifier_chain_register(&panic_notifier_list, &panic_blk);
 	dload_mode_addr = MSM_IMEM_BASE + DLOAD_MODE_ADDR;
 
-	get_dload_mode();
+	// TODO: see if needed get_dload_mode();
 	/* Reset detection is switched on below.*/
 	set_dload_mode(download_mode?1:0);
 #endif

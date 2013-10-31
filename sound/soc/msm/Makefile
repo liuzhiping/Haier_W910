@@ -69,7 +69,7 @@ else
 snd-soc-msm8960-objs := msm8960-acer-a9.o
 endif
 else
-snd-soc-msm8960-objs := msm8960.o apq8064.o msm8930.o mpq8064.o apq8064-i2s.o
+snd-soc-msm8960-objs := msm8960.o apq8064.o msm8930.o mpq8064.o
 endif
 obj-$(CONFIG_SND_SOC_MSM8960) += snd-soc-msm8960.o
 
