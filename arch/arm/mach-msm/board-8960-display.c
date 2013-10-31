@@ -57,16 +57,6 @@
 
 #define MDP_VSYNC_GPIO 0
 
-#define MIPI_CMD_NOVATEK_QHD_PANEL_NAME	"mipi_cmd_novatek_qhd"
-#define MIPI_VIDEO_NOVATEK_QHD_PANEL_NAME	"mipi_video_novatek_qhd"
-#define MIPI_VIDEO_TOSHIBA_WSVGA_PANEL_NAME	"mipi_video_toshiba_wsvga"
-#define MIPI_VIDEO_TOSHIBA_WUXGA_PANEL_NAME	"mipi_video_toshiba_wuxga"
-#define MIPI_VIDEO_CHIMEI_WXGA_PANEL_NAME	"mipi_video_chimei_wxga"
-#define MIPI_VIDEO_CHIMEI_WUXGA_PANEL_NAME	"mipi_video_chimei_wuxga"
-#define MIPI_VIDEO_SIMULATOR_VGA_PANEL_NAME	"mipi_video_simulator_vga"
-#define MIPI_CMD_RENESAS_FWVGA_PANEL_NAME	"mipi_cmd_renesas_fwvga"
-#define MIPI_VIDEO_ORISE_720P_PANEL_NAME	"mipi_video_orise_720p"
-#define MIPI_CMD_ORISE_720P_PANEL_NAME		"mipi_cmd_orise_720p"
 #define HDMI_PANEL_NAME	"hdmi_msm"
 #define TVOUT_PANEL_NAME	"tvout_msm"
 
@@ -87,87 +77,9 @@ static struct resource msm_fb_resources[] = {
 	}
 };
 
-static void set_mdp_clocks_for_wuxga(void);
-
 static int msm_fb_detect_panel(const char *name)
 {
-	if (machine_is_msm8960_liquid()) {
-		u32 ver = socinfo_get_platform_version();
-		if (SOCINFO_VERSION_MAJOR(ver) == 3) {
-			if (!strncmp(name, MIPI_VIDEO_CHIMEI_WUXGA_PANEL_NAME,
-				     strnlen(MIPI_VIDEO_CHIMEI_WUXGA_PANEL_NAME,
-						PANEL_NAME_MAX_LEN))) {
-				set_mdp_clocks_for_wuxga();
-				return 0;
-			}
-		} else {
-			if (!strncmp(name, MIPI_VIDEO_CHIMEI_WXGA_PANEL_NAME,
-				     strnlen(MIPI_VIDEO_CHIMEI_WXGA_PANEL_NAME,
-						PANEL_NAME_MAX_LEN)))
-				return 0;
-		}
-	} else {
-		if (!strncmp(name, MIPI_VIDEO_TOSHIBA_WSVGA_PANEL_NAME,
-				strnlen(MIPI_VIDEO_TOSHIBA_WSVGA_PANEL_NAME,
-					PANEL_NAME_MAX_LEN)))
-			return 0;
-
-#if !defined(CONFIG_FB_MSM_LVDS_MIPI_PANEL_DETECT) && \
-	!defined(CONFIG_FB_MSM_MIPI_PANEL_DETECT)
-		if (!strncmp(name, MIPI_VIDEO_NOVATEK_QHD_PANEL_NAME,
-				strnlen(MIPI_VIDEO_NOVATEK_QHD_PANEL_NAME,
-					PANEL_NAME_MAX_LEN)))
-			return 0;
-
-		if (!strncmp(name, MIPI_CMD_NOVATEK_QHD_PANEL_NAME,
-				strnlen(MIPI_CMD_NOVATEK_QHD_PANEL_NAME,
-					PANEL_NAME_MAX_LEN)))
-			return 0;
-
-		if (!strncmp(name, MIPI_VIDEO_SIMULATOR_VGA_PANEL_NAME,
-				strnlen(MIPI_VIDEO_SIMULATOR_VGA_PANEL_NAME,
-					PANEL_NAME_MAX_LEN)))
-			return 0;
-
-		if (!strncmp(name, MIPI_CMD_RENESAS_FWVGA_PANEL_NAME,
-				strnlen(MIPI_CMD_RENESAS_FWVGA_PANEL_NAME,
-					PANEL_NAME_MAX_LEN)))
-			return 0;
-
-		if (!strncmp(name, MIPI_VIDEO_TOSHIBA_WUXGA_PANEL_NAME,
-				strnlen(MIPI_VIDEO_TOSHIBA_WUXGA_PANEL_NAME,
-					PANEL_NAME_MAX_LEN))) {
-			set_mdp_clocks_for_wuxga();
-			return 0;
-		}
-
-		if (!strncmp(name, MIPI_VIDEO_ORISE_720P_PANEL_NAME,
-				strnlen(MIPI_VIDEO_ORISE_720P_PANEL_NAME,
-					PANEL_NAME_MAX_LEN)))
-			return 0;
-
-		if (!strncmp(name, MIPI_CMD_ORISE_720P_PANEL_NAME,
-				strnlen(MIPI_CMD_ORISE_720P_PANEL_NAME,
-					PANEL_NAME_MAX_LEN)))
-			return 0;
-#endif
-	}
-
-	if (!strncmp(name, HDMI_PANEL_NAME,
-			strnlen(HDMI_PANEL_NAME,
-				PANEL_NAME_MAX_LEN))) {
-		if (hdmi_is_primary)
-			set_mdp_clocks_for_wuxga();
-		return 0;
-	}
-
-	if (!strncmp(name, TVOUT_PANEL_NAME,
-			strnlen(TVOUT_PANEL_NAME,
-				PANEL_NAME_MAX_LEN)))
-		return 0;
-
-	pr_warning("%s: not supported '%s'", __func__, name);
-	return -ENODEV;
+	return 0;
 }
 
 static struct msm_fb_platform_data msm_fb_pdata = {
@@ -606,81 +518,8 @@ static char mipi_dsi_splash_is_enabled(void)
 	return mdp_pdata.cont_splash_enabled;
 }
 
-static struct platform_device mipi_dsi_renesas_panel_device = {
-	.name = "mipi_renesas",
-	.id = 0,
-};
-
 static struct platform_device mipi_dsi_simulator_panel_device = {
 	.name = "mipi_simulator",
-	.id = 0,
-};
-
-#define LPM_CHANNEL0 0
-static int toshiba_gpio[] = {LPM_CHANNEL0};
-
-static struct mipi_dsi_panel_platform_data toshiba_pdata = {
-	.gpio = toshiba_gpio,
-	.dsi_pwm_cfg = mipi_dsi_panel_pwm_cfg,
-};
-
-static struct platform_device mipi_dsi_toshiba_panel_device = {
-	.name = "mipi_toshiba",
-	.id = 0,
-	.dev = {
-		.platform_data = &toshiba_pdata,
-	}
-};
-
-#define FPGA_3D_GPIO_CONFIG_ADDR	0xB5
-static int dsi2lvds_gpio[4] = {
-	0,/* Backlight PWM-ID=0 for PMIC-GPIO#24 */
-	0x1F08, /* DSI2LVDS Bridge GPIO Output, mask=0x1f, out=0x08 */
-	GPIO_LIQUID_EXPANDER_BASE+6,	/* TN Enable */
-	GPIO_LIQUID_EXPANDER_BASE+7,	/* TN Mode */
-	};
-
-static struct msm_panel_common_pdata mipi_dsi2lvds_pdata = {
-	.gpio_num = dsi2lvds_gpio,
-};
-
-static struct mipi_dsi_phy_ctrl dsi_novatek_cmd_mode_phy_db = {
-
-/* DSI_BIT_CLK at 500MHz, 2 lane, RGB888 */
-	{0x0F, 0x0a, 0x04, 0x00, 0x20},	/* regulator */
-	/* timing   */
-	{0xab, 0x8a, 0x18, 0x00, 0x92, 0x97, 0x1b, 0x8c,
-	0x0c, 0x03, 0x04, 0xa0},
-	{0x5f, 0x00, 0x00, 0x10},	/* phy ctrl */
-	{0xff, 0x00, 0x06, 0x00},	/* strength */
-	/* pll control */
-	{0x40, 0xf9, 0x30, 0xda, 0x00, 0x40, 0x03, 0x62,
-	0x40, 0x07, 0x03,
-	0x00, 0x1a, 0x00, 0x00, 0x02, 0x00, 0x20, 0x00, 0x01},
-};
-
-static struct mipi_dsi_panel_platform_data novatek_pdata = {
-	.fpga_3d_config_addr  = FPGA_3D_GPIO_CONFIG_ADDR,
-	.fpga_ctrl_mode = FPGA_SPI_INTF,
-	.phy_ctrl_settings = &dsi_novatek_cmd_mode_phy_db,
-};
-
-static struct platform_device mipi_dsi_novatek_panel_device = {
-	.name = "mipi_novatek",
-	.id = 0,
-	.dev = {
-		.platform_data = &novatek_pdata,
-	}
-};
-
-static struct platform_device mipi_dsi2lvds_bridge_device = {
-	.name = "mipi_tc358764",
-	.id = 0,
-	.dev.platform_data = &mipi_dsi2lvds_pdata,
-};
-
-static struct platform_device mipi_dsi_orise_panel_device = {
-	.name = "mipi_orise",
 	.id = 0,
 };
 
@@ -741,60 +580,6 @@ static struct platform_device wfd_device = {
 	.name          = "msm_wfd",
 	.id            = -1,
 };
-#endif
-
-#ifdef CONFIG_MSM_BUS_SCALING
-static struct msm_bus_vectors dtv_bus_init_vectors[] = {
-	{
-		.src = MSM_BUS_MASTER_MDP_PORT0,
-		.dst = MSM_BUS_SLAVE_EBI_CH0,
-		.ab = 0,
-		.ib = 0,
-	},
-};
-
-static struct msm_bus_vectors dtv_bus_def_vectors[] = {
-	{
-		.src = MSM_BUS_MASTER_MDP_PORT0,
-		.dst = MSM_BUS_SLAVE_EBI_CH0,
-		.ab = 566092800 * 2,
-		.ib = 707616000 * 2,
-	},
-};
-
-static struct msm_bus_paths dtv_bus_scale_usecases[] = {
-	{
-		ARRAY_SIZE(dtv_bus_init_vectors),
-		dtv_bus_init_vectors,
-	},
-	{
-		ARRAY_SIZE(dtv_bus_def_vectors),
-		dtv_bus_def_vectors,
-	},
-};
-static struct msm_bus_scale_pdata dtv_bus_scale_pdata = {
-	dtv_bus_scale_usecases,
-	ARRAY_SIZE(dtv_bus_scale_usecases),
-	.name = "dtv",
-};
-
-static struct lcdc_platform_data dtv_pdata = {
-	.bus_scale_table = &dtv_bus_scale_pdata,
-	.lcdc_power_save = hdmi_panel_power,
-};
-
-static int hdmi_panel_power(int on)
-{
-	int rc;
-
-	pr_debug("%s: HDMI Core: %s\n", __func__, (on ? "ON" : "OFF"));
-	rc = hdmi_core_power(on, 1);
-	if (rc)
-		rc = hdmi_cec_power(on);
-
-	pr_debug("%s: HDMI Core: %s Success\n", __func__, (on ? "ON" : "OFF"));
-	return rc;
-}
 #endif
 
 #ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
@@ -1006,30 +791,13 @@ void __init msm8960_init_fb(void)
 	if (machine_is_msm8960_sim())
 		platform_device_register(&mipi_dsi_simulator_panel_device);
 
-	if (machine_is_msm8960_rumi3())
-		platform_device_register(&mipi_dsi_renesas_panel_device);
-
-	if (!machine_is_msm8960_sim() && !machine_is_msm8960_rumi3()) {
-		platform_device_register(&mipi_dsi_novatek_panel_device);
-		platform_device_register(&mipi_dsi_orise_panel_device);
-
-#ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
-		platform_device_register(&hdmi_msm_device);
-#endif
-	}
-
-	if (machine_is_msm8960_liquid())
-		platform_device_register(&mipi_dsi2lvds_bridge_device);
-	else
-		platform_device_register(&mipi_dsi_toshiba_panel_device);
-
 	if (machine_is_msm8x60_rumi3()) {
 		msm_fb_register_device("mdp", NULL);
 		mipi_dsi_pdata.target_type = 1;
 	} else
 		msm_fb_register_device("mdp", &mdp_pdata);
 	msm_fb_register_device("mipi_dsi", &mipi_dsi_pdata);
-#ifdef CONFIG_MSM_BUS_SCALING
+#if defined(CONFIG_MSM_BUS_SCALING) && defined(CONFIG_FB_MSM_DTV)
 	msm_fb_register_device("dtv", &dtv_pdata);
 #endif
 }
@@ -1047,27 +815,6 @@ void __init msm8960_allocate_fb_region(void)
 			size, addr, __pa(addr));
 }
 
-/**
- * Set MDP clocks to high frequency to avoid DSI underflow
- * when using high resolution 1200x1920 WUXGA panels
- */
-static void set_mdp_clocks_for_wuxga(void)
-{
-	mdp_ui_vectors[0].ab = 2000000000;
-	mdp_ui_vectors[0].ib = 2000000000;
-	mdp_vga_vectors[0].ab = 2000000000;
-	mdp_vga_vectors[0].ib = 2000000000;
-	mdp_720p_vectors[0].ab = 2000000000;
-	mdp_720p_vectors[0].ib = 2000000000;
-	mdp_1080p_vectors[0].ab = 2000000000;
-	mdp_1080p_vectors[0].ib = 2000000000;
-
-	if (hdmi_is_primary) {
-		dtv_bus_def_vectors[0].ab = 2000000000;
-		dtv_bus_def_vectors[0].ib = 2000000000;
-	}
-}
-
 void __init msm8960_set_display_params(char *prim_panel, char *ext_panel)
 {
 	int disable_splash = 0;
@@ -1077,28 +824,6 @@ void __init msm8960_set_display_params(char *prim_panel, char *ext_panel)
 		pr_debug("msm_fb_pdata.prim_panel_name %s\n",
 			msm_fb_pdata.prim_panel_name);
 
-		if (strncmp((char *)msm_fb_pdata.prim_panel_name,
-			MIPI_VIDEO_TOSHIBA_WSVGA_PANEL_NAME,
-			strnlen(MIPI_VIDEO_TOSHIBA_WSVGA_PANEL_NAME,
-				PANEL_NAME_MAX_LEN))) {
-			/* Disable splash for panels other than Toshiba WSVGA */
-			disable_splash = 1;
-		}
-
-		if (!strncmp((char *)msm_fb_pdata.prim_panel_name,
-			HDMI_PANEL_NAME, strnlen(HDMI_PANEL_NAME,
-				PANEL_NAME_MAX_LEN))) {
-			pr_debug("HDMI is the primary display by"
-				" boot parameter\n");
-			hdmi_is_primary = 1;
-			set_mdp_clocks_for_wuxga();
-		}
-		if (!strncmp((char *)msm_fb_pdata.prim_panel_name,
-				MIPI_VIDEO_TOSHIBA_WUXGA_PANEL_NAME,
-				strnlen(MIPI_VIDEO_TOSHIBA_WUXGA_PANEL_NAME,
-					PANEL_NAME_MAX_LEN))) {
-			set_mdp_clocks_for_wuxga();
-		}
 	}
 	if (strnlen(ext_panel, PANEL_NAME_MAX_LEN)) {
 		strlcpy(msm_fb_pdata.ext_panel_name, ext_panel,
