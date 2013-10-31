@@ -1623,7 +1623,7 @@ void diag_process_hdlc(void *data, unsigned len)
 	hdlc.dest_idx = 0;
 	hdlc.escaping = 0;
 
-#ifdef CONFIG_DIAG_LOCK
+#if  defined(CONFIG_DIAG_LOCK) && defined(CONFIG_MACH_ACER_A9)
        /* if diag doesn't receive unlock commmand, it will return error code */
        if (fast_charging_mode) {
                fast_charging_mode = 0;
